@@ -34,11 +34,13 @@ class ofApp : public ofBaseApp{
         int neuron_port;
         string neuron_ip;
         bool neuron_drawDebug;
-        bool drawMesh;
-        float meshMorphDuration;
+
+        bool drawMesh, shuffleMesh;
+        float meshMorphDuration, meshUpdateInterval, meshMorphMin, meshMorphMax;
     
     private: // helper methods
-        void loadMocapMesh(ofMesh &mesh);
+        void meshUpdate();
+        void loadMocapMesh(ofMesh &mesh, bool shuffled=false);
         void morphMesh(ofMesh &from, ofMesh &to, ofMesh &target, float progress);
     
     private: // attributes
@@ -47,7 +49,8 @@ class ofApp : public ofBaseApp{
 
         ofMesh mesh1, mesh2, mesh3;
         ofMesh *mesh_from, *mesh_to, *mesh_current;
-
+        float nextMeshIntervalUpdateTime;
+        const float NEVER_AUTO_UPDATE_MESH=99999.0f;
     private: // animations
 
         ofxAnimatableFloat meshMorphAnim;
