@@ -28,6 +28,7 @@ void ofApp::setupParams(){
     RUI_SHARE_PARAM(neuron_drawDebug);
     RUI_NEW_GROUP("MESH");
     RUI_SHARE_PARAM(drawMesh);
+    RUI_SHARE_PARAM(shuffleMesh);
     RUI_SHARE_PARAM(meshMorphDuration, 0.01f, 10.0f);
     //load values from XML, as they were last saved (if they were)
     RUI_LOAD_FROM_XML();
@@ -82,7 +83,7 @@ void ofApp::keyPressed(int key){
         mesh_from = tmp;
 
         // reload leader mesh
-        loadMocapMesh(*mesh_to);
+        loadMocapMesh(*mesh_to, shuffleMesh);
 
         // first load? Load the "trailing" mesh along with the leading mesh
         if(!mesh_from->hasVertices()){
@@ -108,13 +109,37 @@ void ofApp::ruiServerCallback(RemoteUIServerCallBackArg &arg){
     }
 }
 
-void ofApp::loadMocapMesh(ofMesh &mesh){
-    mesh.clear();
+void ofApp::loadMocapMesh(ofMesh &mesh, bool shuffled){
+    int vertex_count = mesh.getNumVertices();
+    int joint_index = 0;
+
     vector<ofxPerceptionNeuron::Skeleton> skeletons = neuron.getSkeletons();
     for(auto &skeleton: skeletons){
-        const vector<ofxPerceptionNeuron::Joint> joints = skeleton.getJoints();
-        for(auto &joint: joints){
-            mesh.addVertex(joint.global_transform.getTranslation()+joint.offset);
+        const vector<ofxPerceptionNeuron::Joint> *joints = &skeleton.getJoints();
+
+        for(auto &joint: *joints){
+            if(joint_index >= vertex_count){
+                mesh.addVertex(joint.global_transform.getTranslation()+joint.offset);
+                vertex_count++;
+            } else {
+                mesh.setVertex(joint_index, joint.global_transform.getTranslation()+joint.offset);
+            }
+            joint_index++;
+        }
+    }
+
+    // if there are more vertices than joints; remove last vertices from mesh
+    while(vertex_count > joint_index){
+        vertex_count--;
+        mesh.removeVertex(vertex_count);
+    }
+
+    if(shuffled){
+        for (int i = mesh.getNumVertices() - 1; i >= 0; i --) {
+            int index = (int)ofRandom(i);
+            ofVec3f tempVertex = mesh.getVertex(index);
+            mesh.setVertex(index, mesh.getVertex(i));
+            mesh.setVertex(i, tempVertex);
         }
     }
 }

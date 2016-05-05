@@ -34,11 +34,12 @@ class ofApp : public ofBaseApp{
         int neuron_port;
         string neuron_ip;
         bool neuron_drawDebug;
-        bool drawMesh;
+
+        bool drawMesh, shuffleMesh;
         float meshMorphDuration;
     
     private: // helper methods
-        void loadMocapMesh(ofMesh &mesh);
+        void loadMocapMesh(ofMesh &mesh, bool shuffled=false);
         void morphMesh(ofMesh &from, ofMesh &to, ofMesh &target, float progress);
     
     private: // attributes
