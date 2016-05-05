@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxPerceptionNeuron.h"
 #include "ofxRemoteUIServer.h"
+#include "ofxAnimatableFloat.h"
 
 class ofApp : public ofBaseApp{
 	public:
@@ -23,7 +24,7 @@ class ofApp : public ofBaseApp{
 //		void dragEvent(ofDragInfo dragInfo);
 //		void gotMessage(ofMessage msg);
 
-    private:
+    private: // rui params
         void setupParams();
         void applyParams();
         void ruiServerCallback(RemoteUIServerCallBackArg &arg);
@@ -33,12 +34,21 @@ class ofApp : public ofBaseApp{
         int neuron_port;
         string neuron_ip;
         bool neuron_drawDebug;
-    bool drawMesh;
-
-    private:
+        bool drawMesh;
+        float meshMorphDuration;
+    
+    private: // helper methods
+        void loadMocapMesh(ofMesh &mesh);
+        void morphMesh(ofMesh &from, ofMesh &to, ofMesh &target, float progress);
+    
+    private: // attributes
         ofxPerceptionNeuron::DataReader neuron;
         ofEasyCam cam;
-    
-        ofMesh mesh;
-    
+
+        ofMesh mesh1, mesh2, mesh3;
+        ofMesh *mesh_from, *mesh_to, *mesh_current;
+
+    private: // animations
+
+        ofxAnimatableFloat meshMorphAnim;
 };
