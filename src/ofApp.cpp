@@ -16,6 +16,8 @@ void ofApp::setup(){
     mesh_from = &mesh1;
     mesh_to = &mesh2;
     mesh_current = &mesh3;
+
+    nextMeshIntervalUpdateTime = NEVER_AUTO_UPDATE_MESH;
 }
 
 void ofApp::setupParams(){
@@ -29,7 +31,10 @@ void ofApp::setupParams(){
     RUI_NEW_GROUP("MESH");
     RUI_SHARE_PARAM(drawMesh);
     RUI_SHARE_PARAM(shuffleMesh);
-    RUI_SHARE_PARAM(meshMorphDuration, 0.01f, 10.0f);
+    RUI_SHARE_PARAM(meshMorphDuration, 0.01f, 5.0f);
+    RUI_SHARE_PARAM(meshUpdateInterval, 0.0f, 5.0f);
+    RUI_SHARE_PARAM(meshMorphMin, -2.0f, 3.0f);
+    RUI_SHARE_PARAM(meshMorphMax, 0.0f, 5.0f);
     //load values from XML, as they were last saved (if they were)
     RUI_LOAD_FROM_XML();
 
@@ -41,13 +46,27 @@ void ofApp::applyParams(){
         neuron.disconnect();
 
     neuron.connect(neuron_ip, neuron_port);
+    
+    if(meshUpdateInterval > 0.0f){
+        if(nextMeshIntervalUpdateTime == NEVER_AUTO_UPDATE_MESH)
+            nextMeshIntervalUpdateTime = 0.1f; // start now!
+    } else {
+        nextMeshIntervalUpdateTime = NEVER_AUTO_UPDATE_MESH; // stop
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    float t = ofGetElapsedTimef();
+
     if(bParamsDirty){
         applyParams();
         bParamsDirty = false;
+    }
+
+    if(t >= nextMeshIntervalUpdateTime){
+        nextMeshIntervalUpdateTime = t + meshUpdateInterval;
+        meshUpdate();
     }
 
     if(meshMorphAnim.isAnimating()){
@@ -67,7 +86,7 @@ void ofApp::draw(){
         ofDrawAxis(100);
     }
 
-    if(drawMesh);
+    if(drawMesh)
         mesh_current->draw();
 
     cam.end();
@@ -75,24 +94,7 @@ void ofApp::draw(){
 
 void ofApp::keyPressed(int key){
     if(key == 'm'){
-        // swap mesh pointers;
-        // the current mesh becomes the origin (avoiding jumps and glitches)
-        // the from mesh becomes the current mesh
-        ofMesh *tmp = mesh_current;
-        mesh_current = mesh_from;
-        mesh_from = tmp;
-
-        // reload leader mesh
-        loadMocapMesh(*mesh_to, shuffleMesh);
-
-        // first load? Load the "trailing" mesh along with the leading mesh
-        if(!mesh_from->hasVertices()){
-            loadMocapMesh(*mesh_from);
-        }
-
-        meshMorphAnim.setDuration(meshMorphDuration);
-        meshMorphAnim.setCurve(QUADRATIC_EASE_OUT);
-        meshMorphAnim.animateFromTo(0.0f, 1.0f);
+        meshUpdate();
     }
 }
 
@@ -107,6 +109,27 @@ void ofApp::ruiServerCallback(RemoteUIServerCallBackArg &arg){
         default:
             break;
     }
+}
+
+void ofApp::meshUpdate(){
+    // swap mesh pointers;
+    // the current mesh becomes the origin (avoiding jumps and glitches)
+    // the from mesh becomes the current mesh
+    ofMesh *tmp = mesh_current;
+    mesh_current = mesh_from;
+    mesh_from = tmp;
+    
+    // reload leader mesh
+    loadMocapMesh(*mesh_to, shuffleMesh);
+    
+    // first load? Load the "trailing" mesh along with the leading mesh
+    if(!mesh_from->hasVertices()){
+        loadMocapMesh(*mesh_from);
+    }
+    
+    meshMorphAnim.setDuration(meshMorphDuration);
+    meshMorphAnim.setCurve(EASE_OUT_BACK); //QUADRATIC_EASE_OUT);
+    meshMorphAnim.animateFromTo(meshMorphMin, meshMorphMax);
 }
 
 void ofApp::loadMocapMesh(ofMesh &mesh, bool shuffled){

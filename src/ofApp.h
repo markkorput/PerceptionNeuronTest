@@ -36,9 +36,10 @@ class ofApp : public ofBaseApp{
         bool neuron_drawDebug;
 
         bool drawMesh, shuffleMesh;
-        float meshMorphDuration;
+        float meshMorphDuration, meshUpdateInterval, meshMorphMin, meshMorphMax;
     
     private: // helper methods
+        void meshUpdate();
         void loadMocapMesh(ofMesh &mesh, bool shuffled=false);
         void morphMesh(ofMesh &from, ofMesh &to, ofMesh &target, float progress);
     
@@ -48,7 +49,8 @@ class ofApp : public ofBaseApp{
 
         ofMesh mesh1, mesh2, mesh3;
         ofMesh *mesh_from, *mesh_to, *mesh_current;
-
+        float nextMeshIntervalUpdateTime;
+        const float NEVER_AUTO_UPDATE_MESH=99999.0f;
     private: // animations
 
         ofxAnimatableFloat meshMorphAnim;
