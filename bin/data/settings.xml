@@ -1,6 +1,0 @@
-<app>
-  <neuron>
-    <ip>127.0.0.1</ip>
-    <port>7001</port>
-  </neuron>
-</app>
