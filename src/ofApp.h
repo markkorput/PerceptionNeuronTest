@@ -22,6 +22,9 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 
     private:
+        void loadSettings();
+
+    private:
         ofxPerceptionNeuron::DataReader neuron;
         ofEasyCam cam;
     

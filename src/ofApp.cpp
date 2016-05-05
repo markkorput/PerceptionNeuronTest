@@ -1,12 +1,24 @@
 #include "ofApp.h"
 
+#include "ofxXmlSettings.h"
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofSetVerticalSync(true);
     ofSetFrameRate(60);
     
     ofSetLogLevel(OF_LOG_VERBOSE);
-    neuron.connect("127.0.0.1", 7001);
+    loadSettings();
+}
+
+void ofApp::loadSettings(){
+    ofxXmlSettings xml;
+    xml.load("settings.xml");
+
+    if(neuron.isConnected())
+        neuron.disconnect();
+
+    neuron.connect(xml.getValue("app:neuron:ip", "127.0.0.1"), xml.getValue("app:neuron:port", 7001));
 }
 
 //--------------------------------------------------------------
@@ -25,7 +37,9 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+    if(key == 'l'){
+        loadSettings();
+    }
 }
 
 //--------------------------------------------------------------
